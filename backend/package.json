@@ -1,20 +1,23 @@
 {
-  "name": "backend",
+  "name": "huggingface-text-generation-demo",
   "version": "1.0.0",
-  "description": "",
-  "main": "server.js",
+  "description": "A demo application using HuggingFace Inference API for text generation",
+  "main": "backend/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node backend/server.js",
+    "dev": "nodemon server.js",
+    "install-all": "npm install && cd frontend && npm install"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
-    "@huggingface/inference": "^4.0.6",
+    "@huggingface/inference": "^2.6.4",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "openai": "^5.2.0"
-  }
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "keywords": ["huggingface", "ai", "text-generation", "nodejs", "express"],
+  "author": "Your Name",
+  "license": "MIT"
 }

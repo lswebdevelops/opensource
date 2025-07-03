@@ -1,38 +1,85 @@
-// index.js
 async function getGeneratedText() {
+  const prompt = document.getElementById("prompt-input").value.trim();
+  const responseElement = document.getElementById("response-text");
+  const button = document.querySelector("button");
+  
+  if (!prompt) {
+    responseElement.textContent = "Please enter a prompt.";
+    return;
+  }
+
+  // Show loading state
+  responseElement.textContent = "Generating response...";
+  button.disabled = true;
+  button.textContent = "Generating...";
+
   try {
-    const response = await fetch('http://localhost:3000/api/hf/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: "The definition of machine learning inference is " })
+    const response = await fetch("/api/hf/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      document.getElementById('response-text').textContent = `Error: ${errorData.error}`;
+      responseElement.textContent = `Error: ${errorData.error}`;
+      if (errorData.suggestion) {
+        responseElement.textContent += `\n\nSuggestion: ${errorData.suggestion}`;
+      }
       return;
     }
-    
+
     const data = await response.json();
-    console.log('Full response:', data); // Debug log
-    
-    // Handle conversational response format
-    let generatedText;
-    if (data.conversation && data.conversation.generated_responses && data.conversation.generated_responses.length > 0) {
-      generatedText = data.conversation.generated_responses[data.conversation.generated_responses.length - 1];
-    } else if (data.generated_text) {
+    let generatedText = "";
+
+    // Handle different response formats
+    if (data.generated_text) {
+      // Standard text generation response
       generatedText = data.generated_text;
+    } else if (data.generated_response) {
+      // Conversational model response
+      generatedText = data.generated_response;
+    } else if (Array.isArray(data) && data.length > 0) {
+      // Array response format
+      generatedText = data[0].generated_text || JSON.stringify(data[0], null, 2);
     } else {
-      generatedText = JSON.stringify(data, null, 2); // Show formatted raw response for debugging
+      // Fallback to raw JSON
+      generatedText = JSON.stringify(data, null, 2);
     }
-    
-    document.getElementById('response-text').textContent = generatedText;
+
+    responseElement.textContent = generatedText;
     
   } catch (error) {
-    console.error('Error:', error);
-    document.getElementById('response-text').textContent = 'Error: Could not reach server.';
+    console.error("Error:", error);
+    responseElement.textContent = "Error: Could not reach server. Make sure the server is running.";
+  } finally {
+    // Reset button state
+    button.disabled = false;
+    button.textContent = "Generate";
   }
 }
 
-// Call the function when page loads
-getGeneratedText();
+// Add Enter key support
+document.getElementById("prompt-input").addEventListener("keypress", function(event) {
+  if (event.key === "Enter") {
+    getGeneratedText();
+  }
+});
+
+// Check server health on page load
+async function checkServerHealth() {
+  try {
+    const response = await fetch("/api/health");
+    const data = await response.json();
+    console.log("Server health:", data);
+    
+    if (!data.hasToken) {
+      document.getElementById("response-text").textContent = "Warning: No HuggingFace token detected. Please add HF_TOKEN to your .env file.";
+    }
+  } catch (error) {
+    console.log("Could not check server health:", error.message);
+  }
+}
+
+// Run health check when page loads
+window.addEventListener("load", checkServerHealth);
