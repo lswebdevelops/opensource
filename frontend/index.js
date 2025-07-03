@@ -74,9 +74,10 @@ document
   });
 
 // Check server health on page load
+// Check server health on page load
 async function checkServerHealth() {
   try {
-    const response = await fetch("/api/health");
+    const response = await fetch(`${BACKEND_URL}/api/health`);
     const data = await response.json();
     console.log("Server health:", data);
 
@@ -88,6 +89,7 @@ async function checkServerHealth() {
     console.log("Could not check server health:", error.message);
   }
 }
+
 
 // Run health check when page loads
 window.addEventListener("load", checkServerHealth);
