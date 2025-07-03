@@ -28,7 +28,7 @@ async function generateTextWithFreeAPI(model, prompt) {
     body: JSON.stringify({
       inputs: prompt,
       parameters: {
-        max_new_tokens: 150,
+        max_new_tokens: 450,
         temperature: 0.7,
         do_sample: true,
         return_full_text: false,
