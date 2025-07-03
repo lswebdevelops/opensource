@@ -2,64 +2,51 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+const { HfInference } = require("@huggingface/inference");
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// Enable CORS so your frontend can access this API
+// Init HuggingFace client
+const hf = new HfInference(process.env.HF_TOKEN);
+
+console.log(hf);
+
 app.use(cors());
 app.use(express.json());
 
 app.post("/api/hf/generate", async (req, res) => {
   try {
     const { prompt } = req.body;
-    if (!prompt)
-      return res
-        .status(400)
-        .json({ error: 'Missing "prompt" in request body' });
-
-    // Changing models:
-    // const model = "HuggingFaceH4/zephyr-7b-beta"
-    // const model = "nlptown/bert-base-multilingual-uncased-sentiment";
-    // const model = "bhadresh-savani/distilbert-base-uncased-emotion";
-    // const model = "deepset/roberta-base-squad2";
-    // const model = "facebook/bart-large-mnli";
-
-    const model = "SamLowe/roberta-base-go_emotions";
-
-    const response = await fetch(
-      `https://api-inference.huggingface.co/models/${model}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${process.env.HF_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          inputs: `<|system|>\nYou are a helpful AI assistant.</s>\n<|user|>\n${prompt}</s>\n<|assistant|>\n`,
-          parameters: {
-            max_new_tokens: 150,
-            temperature: 0.7,
-            return_full_text: false,
-          },
-          options: {
-            wait_for_model: true,
-          },
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`HF API Error: ${response.status} - ${errorText}`);
+    if (!prompt) {
+      return res.status(400).json({ error: 'Missing "prompt" in request body' });
     }
 
-    const data = await response.json();
-    res.json(data);
+    // Para geração de texto, use um modelo como: "HuggingFaceH4/zephyr-7b-beta"
+    const model = "HuggingFaceH4/zephyr-7b-beta";
+
+    const result = await hf.textGeneration({
+      model,
+      inputs: prompt,
+      parameters: {
+        max_new_tokens: 150,
+        temperature: 0.7,
+      },
+    });
+
+    res.json(result);
   } catch (error) {
     console.error("Error generating text:", error.message);
     res.status(500).json({ error: error.message });
   }
+});
+
+
+
+
+
+app.get("/", (req, res) => {
+  res.send("HuggingFace API backend is running.");
 });
 
 app.listen(port, () => {
