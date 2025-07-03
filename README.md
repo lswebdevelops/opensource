@@ -27,7 +27,8 @@ Before you begin, ensure you have the following installed:
 
 2. **Install dependencies**
    ```bash
-   npm install
+   cd backend;
+   npm install (in the backend folder)
    ```
 
 3. **Set up environment variables**
